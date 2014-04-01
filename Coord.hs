@@ -15,7 +15,10 @@ class (Show a, Eq a, Ord a) => Coord a where
     neighborPairs :: a -> a -> [(a,a)]
     generateList :: Int -> [a]
 
-data Coord3d = Coord3d {x3Coord :: Int, y3Coord :: Int, z3Coord :: Int} deriving (Ord, Eq)
+data Coord3d = Coord3d { x3Coord :: Int
+                       , y3Coord :: Int
+                       , z3Coord :: Int
+                       } deriving (Ord, Eq)
 
 instance Show Coord3d where
    show (Coord3d x y z) = show x ++ " " ++ show y ++  " " ++ show z
@@ -29,7 +32,9 @@ instance Coord Coord3d where
     
     generateList n = [Coord3d x 0 0| x <- [1..n]]
 
-    neighbors (Coord3d x y z) = [Coord3d (x+1) y z, Coord3d x (y+1) z, Coord3d x y (z+1)]
+    neighbors (Coord3d x y z) = [Coord3d (x+1) y z
+                                , Coord3d x (y+1) z
+                                , Coord3d x y (z+1)]
 
     neighborPairs (Coord3d ax ay az) (Coord3d bx by bz)
                 | ax == bx = [ (Coord3d (ax+1) ay az, Coord3d (bx+1) by bz),
@@ -45,7 +50,10 @@ instance Coord Coord3d where
                                (Coord3d ax (ay+1) az, Coord3d bx (by+1) bz),
                                (Coord3d ax (ay-1) az, Coord3d bx (by-1) bz) ]
 
-data CoordFCC = CoordFCC { xFCC :: Int, yFCC :: Int, zFCC :: Int } deriving (Ord, Eq)
+data CoordFCC = CoordFCC { xFCC :: Int
+                         , yFCC :: Int
+                         , zFCC :: Int
+                         } deriving (Ord, Eq)
 
 instance Show CoordFCC where
     show (CoordFCC x y z) = show x ++ " " ++ show y ++ " " ++ show z
@@ -60,8 +68,10 @@ instance Coord CoordFCC where
     
     dadj a b = undefined
 
-    generateList n = map createCoord $ zip3 [0..n] (cycle [0, 1, 0, 0]) (cycle [0, 0, 0, 1])
+    generateList n = map createCoord $ zip3 [0..(n-1)] ys zs
         where 
+            ys = cycle [0, 1, 0, 0]
+            zs = cycle [0, 0, 0, 1]
             createCoord (x, y, z) = CoordFCC x y z
 
     neighbors (CoordFCC x y z) = [ CoordFCC x     (y+1) (z+1)
@@ -78,39 +88,39 @@ instance Coord CoordFCC where
                                  , CoordFCC (x-1) y     (z-1) ]
 
     neighborPairs (CoordFCC ax ay az) (CoordFCC bx by bz)
-               | ax == bx = [ (CoordFCC ax (ay-1) (az-1), CoordFCC bx (by-1) (bz-1)) 
-                            , (CoordFCC ax (ay+1) (az+1), CoordFCC bx (by+1) (bz+1)) 
-                            , (CoordFCC (ax+1) ay (az+1), CoordFCC (bx+1) by (bz+1))
-                            , (CoordFCC (ax-1) ay (az+1), CoordFCC (bx-1) by (bz+1))
-                            , (CoordFCC (ax+1) ay (az-1), CoordFCC (bx+1) by (bz-1))
-                            , (CoordFCC (ax-1) ay (az-1), CoordFCC (bx-1) by (bz-1))
-                            , (CoordFCC (ax-1) (ay-1) az, CoordFCC (bx-1) (by-1) bz)
-                            , (CoordFCC (ax+1) (ay+1) az, CoordFCC (bx+1) (by+1) bz)
-                            , (CoordFCC (ax+1) (ay-1) az, CoordFCC (bx+1) (by-1) bz)
-                            , (CoordFCC (ax-1) (ay+1) az, CoordFCC (bx-1) (by+1) bz)
-                            ]
-               | ay == by = [ (CoordFCC ax (ay-1) (az+1), CoordFCC bx (by-1) (bz+1))
-                            , (CoordFCC ax (ay+1) (az-1), CoordFCC bx (by+1) (bz-1))
-                            , (CoordFCC ax (ay-1) (az-1), CoordFCC bx (by-1) (bz-1)) 
-                            , (CoordFCC ax (ay+1) (az+1), CoordFCC bx (by+1) (bz+1)) 
-                            , (CoordFCC (ax+1) ay (az+1), CoordFCC (bx+1) by (bz+1))
-                            , (CoordFCC (ax-1) ay (az-1), CoordFCC (bx-1) by (bz-1))
-                            , (CoordFCC (ax-1) (ay-1) az, CoordFCC (bx-1) (by-1) bz)
-                            , (CoordFCC (ax+1) (ay+1) az, CoordFCC (bx+1) (by+1) bz)
-                            , (CoordFCC (ax+1) (ay-1) az, CoordFCC (bx+1) (by-1) bz)
-                            , (CoordFCC (ax-1) (ay+1) az, CoordFCC (bx-1) (by+1) bz)
-                            ]
-               | az == bz = [ (CoordFCC ax (ay-1) (az+1), CoordFCC bx (by-1) (bz+1))
-                            , (CoordFCC ax (ay+1) (az-1), CoordFCC bx (by+1) (bz-1))
-                            , (CoordFCC ax (ay-1) (az-1), CoordFCC bx (by-1) (bz-1)) 
-                            , (CoordFCC ax (ay+1) (az+1), CoordFCC bx (by+1) (bz+1)) 
-                            , (CoordFCC (ax+1) ay (az+1), CoordFCC (bx+1) by (bz+1))
-                            , (CoordFCC (ax-1) ay (az+1), CoordFCC (bx-1) by (bz+1))
-                            , (CoordFCC (ax+1) ay (az-1), CoordFCC (bx+1) by (bz-1))
-                            , (CoordFCC (ax-1) ay (az-1), CoordFCC (bx-1) by (bz-1))
-                            , (CoordFCC (ax-1) (ay-1) az, CoordFCC (bx-1) (by-1) bz)
-                            , (CoordFCC (ax+1) (ay+1) az, CoordFCC (bx+1) (by+1) bz)
-                            ]
+       | ax == bx = [ (CoordFCC ax (ay-1) (az-1), CoordFCC bx (by-1) (bz-1)) 
+                    , (CoordFCC ax (ay+1) (az+1), CoordFCC bx (by+1) (bz+1)) 
+                    , (CoordFCC (ax+1) ay (az+1), CoordFCC (bx+1) by (bz+1))
+                    , (CoordFCC (ax-1) ay (az+1), CoordFCC (bx-1) by (bz+1))
+                    , (CoordFCC (ax+1) ay (az-1), CoordFCC (bx+1) by (bz-1))
+                    , (CoordFCC (ax-1) ay (az-1), CoordFCC (bx-1) by (bz-1))
+                    , (CoordFCC (ax-1) (ay-1) az, CoordFCC (bx-1) (by-1) bz)
+                    , (CoordFCC (ax+1) (ay+1) az, CoordFCC (bx+1) (by+1) bz)
+                    , (CoordFCC (ax+1) (ay-1) az, CoordFCC (bx+1) (by-1) bz)
+                    , (CoordFCC (ax-1) (ay+1) az, CoordFCC (bx-1) (by+1) bz)
+                    ]
+       | ay == by = [ (CoordFCC ax (ay-1) (az+1), CoordFCC bx (by-1) (bz+1))
+                    , (CoordFCC ax (ay+1) (az-1), CoordFCC bx (by+1) (bz-1))
+                    , (CoordFCC ax (ay-1) (az-1), CoordFCC bx (by-1) (bz-1)) 
+                    , (CoordFCC ax (ay+1) (az+1), CoordFCC bx (by+1) (bz+1)) 
+                    , (CoordFCC (ax+1) ay (az+1), CoordFCC (bx+1) by (bz+1))
+                    , (CoordFCC (ax-1) ay (az-1), CoordFCC (bx-1) by (bz-1))
+                    , (CoordFCC (ax-1) (ay-1) az, CoordFCC (bx-1) (by-1) bz)
+                    , (CoordFCC (ax+1) (ay+1) az, CoordFCC (bx+1) (by+1) bz)
+                    , (CoordFCC (ax+1) (ay-1) az, CoordFCC (bx+1) (by-1) bz)
+                    , (CoordFCC (ax-1) (ay+1) az, CoordFCC (bx-1) (by+1) bz)
+                    ]
+       | az == bz = [ (CoordFCC ax (ay-1) (az+1), CoordFCC bx (by-1) (bz+1))
+                    , (CoordFCC ax (ay+1) (az-1), CoordFCC bx (by+1) (bz-1))
+                    , (CoordFCC ax (ay-1) (az-1), CoordFCC bx (by-1) (bz-1)) 
+                    , (CoordFCC ax (ay+1) (az+1), CoordFCC bx (by+1) (bz+1)) 
+                    , (CoordFCC (ax+1) ay (az+1), CoordFCC (bx+1) by (bz+1))
+                    , (CoordFCC (ax-1) ay (az+1), CoordFCC (bx-1) by (bz+1))
+                    , (CoordFCC (ax+1) ay (az-1), CoordFCC (bx+1) by (bz-1))
+                    , (CoordFCC (ax-1) ay (az-1), CoordFCC (bx-1) by (bz-1))
+                    , (CoordFCC (ax-1) (ay-1) az, CoordFCC (bx-1) (by-1) bz)
+                    , (CoordFCC (ax+1) (ay+1) az, CoordFCC (bx+1) (by+1) bz)
+                    ]
 
  
 data Coord2d = Coord2d {xCoord :: Int, yCoord :: Int} deriving (Ord, Eq)
@@ -134,6 +144,7 @@ instance Coord Coord2d where
                                (Coord2d ax (ay-1), Coord2d bx (by-1)) ]
     generateList n = [Coord2d x 0 | x <- [1..n]]
 
+{- Some functions for printing the 2d chain in the terminal, see Print.hs -}
 
 createCoords :: [Int] -> [Int] -> [Coord2d]
 createCoords xs ys = [Coord2d x y | x <- xs, y <- ys]

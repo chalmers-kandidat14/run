@@ -48,3 +48,8 @@ showRowWith disp chain j =
 instance Show (Chain Coord2d) where
         show = (showRowsWith show)
 
+instance Show (Chain Coord3d) where
+        show = unlines . map show . toList
+
+instance Show (Chain CoordFCC) where
+        show = unlines . map show . toList

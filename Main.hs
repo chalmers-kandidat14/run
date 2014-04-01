@@ -12,22 +12,33 @@ import Control.Monad.Primitive
 import qualified Data.Vector as V
 import System.Environment
 
--- Get probability for one list element given uniform distribution
-getProb :: [a] -> Double
-getProb list = fromRational $ 1 / (fromIntegral $ length list)
+data PullMoveState a = PMState {
+                                currState :: (Chain a),
+                                possMoves ::  (V.Vector (Chain a))
+                                }
 
--- Randomly select one candidate of all given pullMoves
-generateCandidate :: (PrimMonad m, Coord a)    => 
-                    Chain a     -> 
-                    Gen (PrimState m) -> 
-                    m (Candidate (Chain a))
-generateCandidate ch gen = do 
-    let list = pullMoves ch
-    chosenMove <-  pick list gen
-    let candidate = after chosenMove
-    let prob = getProb list
-    let probBack = getProb $ pullMoves candidate
-    return $ Candidate candidate (prob, probBack)
+genPullCand :: (PrimMonad m, Coord a) => Gen (PrimState m) 
+                                      -> PullMoveState a 
+                                      -> m (Candidate (PullMoveState a))
+genPullCand gen (PMState _ pMoves) = do
+    candChain <- pick pMoves gen
+    let candPMoves = V.fromList $ map after $ pullMoves candChain
+    let px = getProb pMoves
+    let py = getProb candPMoves
+    let cand = PMState candChain candPMoves
+    return $ Candidate cand px py
+
+makePMS :: Coord a => Chain a -> PullMoveState a
+makePMS ch = PMState ch (V.fromList $ map after $ pullMoves ch)
+
+
+-- Select one element at random from a list
+pick :: (PrimMonad m) => V.Vector a -> Gen (PrimState m) -> m a
+pick xs gen = uniformR (0, (V.length xs)-1) gen >>= return . (xs V.!)
+
+-- Get probability for one list element given uniform distribution
+getProb :: V.Vector a -> Double
+getProb list = 1 --fromRational $ 1 / (fromIntegral $ V.length list)
 
 -- Generate a chain with a fixed length
 createChain :: Coord a => Int -> Chain a
@@ -40,28 +51,36 @@ generateTemps n = [ef $ fromIntegral t | t <- [0..n]]
 		ef :: Double -> Double
 		ef t = a * exp ((- t) * b / fromIntegral n)
 		a :: Double
-		a = 100
+		a = 1
 		b :: Double
-		b = 10
+		b = 1000
 		pf :: Double -> Double
 		pf t = a * (1 - t / fromIntegral n) ^ p
 		p :: Int
 		p = 2
 
+expQuota :: Double -> Double -> Double -> Double
+expQuota chx chy t = exp ((chx - chy) / t)
+
+expScore :: Coord a => V.Vector HPResidue 
+                    -> PullMoveState a 
+                    -> PullMoveState a 
+                    -> Double 
+                    -> Double
+expScore residues chx chy t = expQuota before after t
+    where 
+        before = -(energy residues $ currState chx) 
+        after =  -(energy residues $ currState chy)
+
 run :: String -> Int -> IO ()
 run input iterations = do    
     let residues = V.fromList $ createResidues input
-    let chain = (createChain (V.length residues)) :: Chain Coord3d
+    let chain = (createChain (V.length residues)) :: Chain CoordFCC 
     let temps = generateTemps iterations
-    let score ch = - (energy residues ch) 
-    run' score chain residues temps
-
--- Run the algorithm!
-run' :: Coord a => (Chain a -> Double) -> Chain a -> V.Vector HPResidue -> [Double] -> IO() 
-run' score chain residues temps = do 
-            g <- createSystemRandom
-            (x, i) <- metropolisHastings score generateCandidate chain g temps
-            printJGReadable x residues 
+    g <- createSystemRandom
+    let init = makePMS chain
+    res <- metropolisHastings (expScore residues) (genPullCand g) g init temps 
+    printJGReadable (currState $ head res) (length res) residues
 
 printHReadable x i res = do
             printHP res x
@@ -70,7 +89,7 @@ printHReadable x i res = do
             putStrLn $ "Number of accepted transitions: " ++ (show i)
             putStrLn $ "Final energy: " ++ show (energy res x)
 
-printJGReadable x res = do
+printJGReadable x i res = do
         putStrLn $ unlines $ chainToJGList x $ V.toList res
 
 
