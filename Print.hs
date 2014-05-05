@@ -20,9 +20,9 @@ chainToJGList ch hpl = zipWith format (toList ch) hpl
 printChain :: Chain Coord2d -> IO ()
 printChain = putStr . show
 
-printHP :: V.Vector HPResidue -> Chain Coord2d -> IO ()
+printHP :: [HPResidue] -> Chain Coord2d -> IO ()
 printHP res ch = putStr $ showRowsWith disp ch
-    where disp = show . (res V.!)
+    where disp = show . (res !!)
 
 showRowsWith :: (Int -> String) -> Chain Coord2d -> String
 showRowsWith disp chain = unlines $ map (showRowWith disp coords) [yMin..yMax]

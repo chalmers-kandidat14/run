@@ -1,7 +1,9 @@
 module HPModel (
                  energy
+               , energyWithList
                , HPResidue
                , createResidues
+               , isHydrophobic
                ) where
 
 import Chain
@@ -19,6 +21,10 @@ instance NeighborResidue HPResidue where
     residueEnergy H H = -1
     residueEnergy _ _ = 0
 
+isHydrophobic :: HPResidue -> Bool
+isHydrophobic H = True
+isHydrophobic _ = False
+
 -- Create a list of residues from an input string
 createResidues :: String -> [HPResidue]
 createResidues [] = []
@@ -33,7 +39,10 @@ energy res ch = fromIntegral $ V.ifoldl f 0 res
         f acc i x = acc + ( foldr ((+) . residueEnergy x . (res V.!)) 0 $ 
                     mapMaybe (cIndex ch) $ 
                     validNeighbors ch i )
-        
+
+energyWithList :: (Coord a, NeighborResidue n) => [n] -> Chain a -> Double
+energyWithList res = energy (V.fromList res)
+
 validNeighbors :: (Coord a) => Chain a -> Int -> [a]
 validNeighbors ch i = filter (notNextTo ch i) (neighbors (ch!i))
 

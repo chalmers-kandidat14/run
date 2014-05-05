@@ -2,7 +2,7 @@ module Coord (
                Coord (..)
              , Coord3d 
              , CoordFCC
-             , Coord2d
+             , Coord2d (..)
              , getMin
              , getMax
              , createCoords

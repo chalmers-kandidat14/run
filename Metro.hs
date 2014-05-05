@@ -42,9 +42,9 @@ metropolisHastings scoref candf g init params = foldM f [init] params
             let a = min 1.0 ((pback cand / pthere cand) * scoref candstate state t)
             let b = traceShow a a
             if a>=1
-                then return (candstate:marx)
+                then return (candstate:[]) --(candstate:marx)
                 else do
                     u <- uniformR (0.0, 1.0) g
                     if u <= a
-                        then return (candstate:marx)
+                        then return (candstate:[]) -- (candstate:marx)
                         else return marx
